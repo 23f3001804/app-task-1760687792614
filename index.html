@@ -3,235 +3,269 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Todo List App</title>
+<title>Todo App with Dark Mode & Persistence</title>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+  :root {
+    --bg-color: #fff;
+    --text-color: #000;
+    --task-bg: #f0f0f0;
+    --button-bg: #007bff;
+    --button-color: #fff;
+    --border-color: #ccc;
+    --fade-duration: 0.5s;
   }
 
-  .container {
-    width: 90%;
-    max-width: 500px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    padding: 20px;
-    box-sizing: border-box;
+  body.dark-mode {
+    --bg-color: #222;
+    --text-color: #eee;
+    --task-bg: #444;
+    --button-bg: #0069d9;
+    --button-color: #fff;
+    --border-color: #555;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    transition: all 0.3s ease;
+    height: 100vh;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    position: relative;
+    border-bottom: 1px solid var(--border-color);
   }
 
   h1 {
     margin: 0;
-    text-align: center;
-    color: #4b0082;
-    font-size: 2em;
+    font-size: 1.5rem;
+  }
+
+  .top-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: darken(var(--button-bg), 10%);
+  }
+
+  .dark-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  main {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
   }
 
   form {
     display: flex;
-    gap: 10px;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
   }
 
   input[type="text"] {
     flex: 1;
-    padding: 10px;
-    border: 2px solid #4b0082;
-    border-radius: 5px;
-    font-size: 1em;
-    transition: border-color 0.2s;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
   }
 
-  input[type="text"]:focus {
-    outline: none;
-    border-color: #6a11cb;
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
   }
 
-  button {
-    padding: 10px 15px;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  button:hover {
-    background: linear-gradient(135deg, #5a0fb4, #1e5edc);
-    transform: translateY(-2px);
-  }
-
-  .task-list {
+  li {
+    background-color: var(--task-bg);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .task-card {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    background: #f0f0f0;
-    padding: 10px;
-    border-radius: 8px;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .task-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
-  }
-
-  .task-info {
-    display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fadeIn 0.5s forwards;
+  }
+
+  li.done {
+    text-decoration: line-through;
+    opacity: 0.6;
   }
 
   .task-text {
-    font-size: 1em;
     flex: 1;
-    word-break: break-word;
   }
 
-  .task-text.completed {
-    text-decoration: line-through;
-    color: #999;
+  .task-buttons {
+    display: flex;
+    gap: 0.5rem;
   }
 
-  .delete-btn {
-    background: transparent;
-    border: none;
-    color: #d11a2a;
-    font-size: 1.2em;
-    cursor: pointer;
-    transition: color 0.2s, transform 0.2s;
-  }
-
-  .delete-btn:hover {
-    color: #a00;
-    transform: scale(1.2);
-  }
-
-  .task-count {
-    text-align: center;
-    font-weight: bold;
-    margin-top: 10px;
-    color: #fff;
-  }
-
-  /* Responsive styles */
-  @media(max-width: 600px) {
-    .container {
-      padding: 15px;
-    }
-    button {
-      width: 100%;
-    }
-    form {
-      flex-direction: column;
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 </style>
 </head>
 <body>
-<div class="container" id="app">
-  <h1>My Todo List</h1>
-  <form id="todo-form">
-    <input type="text" id="new-task" placeholder="Add a new task..." required />
-    <button type="submit">Add Task</button>
-  </form>
-  <div class="task-list" id="task-list">
-    <!-- Tasks will appear here -->
+<header>
+  <h1>Todo List</h1>
+  <div class="top-buttons">
+    <button id="clearAllBtn">Clear All</button>
   </div>
-  <div class="task-count" id="task-count">0 Tasks</div>
-</div>
-
+  <button class="dark-toggle" id="darkModeBtn">Dark Mode</button>
+</header>
+<main>
+  <form id="todoForm">
+    <input type="text" id="taskInput" placeholder="Add a new task" required />
+    <button type="submit">Add</button>
+  </form>
+  <ul id="taskList"></ul>
+</main>
 <script>
-  const form = document.getElementById('todo-form');
-  const taskInput = document.getElementById('new-task');
-  const taskListContainer = document.getElementById('task-list');
-  const taskCountEl = document.getElementById('task-count');
+  const taskInput = document.getElementById('taskInput');
+  const taskList = document.getElementById('taskList');
+  const todoForm = document.getElementById('todoForm');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const darkModeBtn = document.getElementById('darkModeBtn');
+  const body = document.body;
 
-  let tasks = [];
+  // Load tasks from localStorage
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-  function updateTaskCount() {
-    taskCountEl.textContent = \`\${tasks.length} Task\ + (tasks.length !== 1 ? 's' : '')\`;
+  // Function to save tasks to localStorage
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
-  function renderTasks() {
-    taskListContainer.innerHTML = '';
-    tasks.forEach((task, index) => {
-      const taskCard = document.createElement('div');
-      taskCard.className = 'task-card';
+  // Function to create task element
+  function createTask(task) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="task-text">${task.text}</span>
+      <div class="task-buttons">
+        <button class="doneBtn">${task.done ? 'Undo' : 'Done'}</button>
+        <button class="deleteBtn">Delete</button>
+      </div>
+    `;
+    if (task.done) {
+      li.classList.add('done');
+      li.querySelector('.doneBtn').textContent = 'Undo';
+    }
 
-      const taskInfo = document.createElement('div');
-      taskInfo.className = 'task-info';
+    // Event listener for Done/Undo button
+    li.querySelector('.doneBtn').addEventListener('click', () => {
+      task.done = !task.done;
+      saveTasks();
+      updateTaskList();
+    });
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = task.completed;
-      checkbox.addEventListener('change', () => {
-        task.completed = checkbox.checked;
-        updateTaskTextStyle(taskText, task.completed);
-      });
+    // Event listener for Delete button
+    li.querySelector('.deleteBtn').addEventListener('click', () => {
+      tasks = tasks.filter(t => t.id !== task.id);
+      saveTasks();
+      updateTaskList();
+    });
 
-      const taskText = document.createElement('div');
-      taskText.className = 'task-text';
-      taskText.textContent = task.text;
-      updateTaskTextStyle(taskText, task.completed);
+    return li;
+  }
 
-      taskInfo.appendChild(checkbox);
-      taskInfo.appendChild(taskText);
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-btn';
-      deleteBtn.innerHTML = '&times;';
-      deleteBtn.title = 'Delete Task';
-      deleteBtn.addEventListener('click', () => {
-        tasks.splice(index,1);
-        renderTasks();
-        updateTaskCount();
-      });
-
-      taskCard.appendChild(taskInfo);
-      taskCard.appendChild(deleteBtn);
-      taskListContainer.appendChild(taskCard);
+  // Function to update task list UI
+  function updateTaskList() {
+    taskList.innerHTML = '';
+    tasks.forEach(task => {
+      const taskEl = createTask(task);
+      if (task.done) {
+        taskEl.classList.add('done');
+        taskEl.querySelector('.doneBtn').textContent = 'Undo';
+      }
+      taskList.appendChild(taskEl);
     });
   }
 
-  function updateTaskTextStyle(element, completed) {
-    if (completed) {
-      element.classList.add('completed');
-    } else {
-      element.classList.remove('completed');
-    }
-  }
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const taskText = taskInput.value.trim();
-    if (taskText) {
-      tasks.push({ text: taskText, completed: false });
-      taskInput.value = '';
-      renderTasks();
-      updateTaskCount();
+  // Load existing tasks on page load
+  window.addEventListener('load', () => {
+    updateTaskList();
+    // Check for dark mode preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      body.classList.add('dark-mode');
+      darkModeBtn.textContent = 'Light Mode';
     }
   });
 
-  // Initial update
-  updateTaskCount();
+  // Handle form submission to add new task
+  todoForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (text) {
+      const newTask = {
+        id: Date.now(),
+        text,
+        done: false
+      };
+      tasks.push(newTask);
+      saveTasks();
+      const taskEl = createTask(newTask);
+      // Add fade-in animation
+      taskEl.style.opacity = '0';
+      taskEl.style.transform = 'translateY(-10px)';
+      taskList.appendChild(taskEl);
+      requestAnimationFrame(() => {
+        taskEl.style.transition = `opacity ${getComputedStyle(document.documentElement).getPropertyValue('--fade-duration')}, transform ${getComputedStyle(document.documentElement).getPropertyValue('--fade-duration')}`;
+        taskEl.style.opacity = '1';
+        taskEl.style.transform = 'translateY(0)';
+      });
+      taskInput.value = '';
+    }
+  });
+
+  // Handle Clear All button
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    tasks = [];
+    saveTasks();
+    updateTaskList();
+  });
+
+  // Handle Dark Mode toggle
+  darkModeBtn.addEventListener('click', () => {
+    if (body.classList.contains('dark-mode')) {
+      body.classList.remove('dark-mode');
+      darkModeBtn.textContent = 'Dark Mode';
+      localStorage.setItem('darkMode', 'disabled');
+    } else {
+      body.classList.add('dark-mode');
+      darkModeBtn.textContent = 'Light Mode';
+      localStorage.setItem('darkMode', 'enabled');
+    }
+  });
 </script>
 </body>
 </html>
